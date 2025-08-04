@@ -12,6 +12,11 @@ import './App.css'
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+console.log('Environment check:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  API_BASE_URL,
+  allEnvVars: import.meta.env
+})
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -34,6 +39,18 @@ function App() {
 
     checkApiConnection()
   }, [])
+
+  // Add a simple loading/error state for debugging
+  if (apiStatus === 'checking') {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Loading LeadDB...</h2>
+          <p>Connecting to API: {API_BASE_URL}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Router>
