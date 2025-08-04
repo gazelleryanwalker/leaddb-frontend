@@ -138,6 +138,163 @@ function Companies() {
   )
 }
 
+// Contacts Component
+function Contacts() {
+  const [contacts, setContacts] = useState([])
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/contacts`)
+        if (response.ok) {
+          const data = await response.json()
+          setContacts(data)
+        }
+      } catch (error) {
+        console.error('Error fetching contacts:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchContacts()
+  }, [])
+  
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ color: '#333', marginBottom: '20px' }}>👥 Contacts</h1>
+      
+      {loading ? (
+        <p>Loading contacts...</p>
+      ) : (
+        <div style={{ backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid #eee', backgroundColor: '#f8f9fa' }}>
+            <h3>Contact Database ({contacts.length} contacts)</h3>
+          </div>
+          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            {contacts.map((contact, index) => (
+              <div key={index} style={{ 
+                padding: '16px 20px', 
+                borderBottom: '1px solid #eee',
+                ':hover': { backgroundColor: '#f8f9fa' }
+              }}>
+                <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>{contact.first_name} {contact.last_name}</h4>
+                <p style={{ margin: '4px 0', color: '#666' }}>📧 {contact.email}</p>
+                <p style={{ margin: '4px 0', color: '#666' }}>💼 {contact.title || 'N/A'}</p>
+                <p style={{ margin: '4px 0', color: '#666' }}>🏢 {contact.company_name || 'N/A'}</p>
+                {contact.phone && (
+                  <p style={{ margin: '4px 0', color: '#666' }}>📞 {contact.phone}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Lead Generation Component
+function LeadGeneration() {
+  const [searchParams, setSearchParams] = useState({ industry: '', location: '', size: '' })
+  const [results, setResults] = useState([])
+  const [loading, setLoading] = useState(false)
+  
+  const handleSearch = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (searchParams.industry) params.append('industry', searchParams.industry)
+      if (searchParams.location) params.append('location', searchParams.location)
+      if (searchParams.size) params.append('size', searchParams.size)
+      
+      const response = await fetch(`${API_BASE_URL}/api/companies/search?${params}`)
+      if (response.ok) {
+        const data = await response.json()
+        setResults(data)
+      }
+    } catch (error) {
+      console.error('Error searching leads:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ color: '#333', marginBottom: '20px' }}>🔍 Lead Generation</h1>
+      
+      <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
+        <h3>Search for Prospects</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginTop: '15px' }}>
+          <input
+            type="text"
+            placeholder="Industry (e.g., Technology)"
+            value={searchParams.industry}
+            onChange={(e) => setSearchParams({...searchParams, industry: e.target.value})}
+            style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+          <input
+            type="text"
+            placeholder="Location (e.g., San Francisco)"
+            value={searchParams.location}
+            onChange={(e) => setSearchParams({...searchParams, location: e.target.value})}
+            style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+          <input
+            type="text"
+            placeholder="Company Size (e.g., 100-500)"
+            value={searchParams.size}
+            onChange={(e) => setSearchParams({...searchParams, size: e.target.value})}
+            style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+          />
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {loading ? 'Searching...' : '🔍 Search'}
+          </button>
+        </div>
+      </div>
+      
+      {results.length > 0 && (
+        <div style={{ backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid #eee', backgroundColor: '#f8f9fa' }}>
+            <h3>Search Results ({results.length} prospects found)</h3>
+          </div>
+          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            {results.map((company, index) => (
+              <div key={index} style={{ 
+                padding: '16px 20px', 
+                borderBottom: '1px solid #eee'
+              }}>
+                <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>{company.name}</h4>
+                <p style={{ margin: '4px 0', color: '#666' }}>Industry: {company.industry || 'N/A'}</p>
+                <p style={{ margin: '4px 0', color: '#666' }}>Size: {company.size || 'N/A'}</p>
+                <p style={{ margin: '4px 0', color: '#666' }}>Location: {company.location || 'N/A'}</p>
+                {company.website && (
+                  <a href={company.website} target="_blank" rel="noopener noreferrer" 
+                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                    🌐 {company.website}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [apiStatus, setApiStatus] = useState('checking')
@@ -162,9 +319,9 @@ function App() {
       case 'companies':
         return <Companies />
       case 'contacts':
-        return <div style={{ padding: '20px' }}><h1>👥 Contacts</h1><p>Contact management coming soon...</p></div>
+        return <Contacts />
       case 'lead-generation':
-        return <div style={{ padding: '20px' }}><h1>🔍 Lead Generation</h1><p>Lead generation tools coming soon...</p></div>
+        return <LeadGeneration />
       case 'lead-lists':
         return <div style={{ padding: '20px' }}><h1>📋 Lead Lists</h1><p>Lead list management coming soon...</p></div>
       case 'export':
