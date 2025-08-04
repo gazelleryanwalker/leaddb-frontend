@@ -1,86 +1,61 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { Toaster } from '@/components/ui/sonner'
-import Sidebar from './components/Sidebar'
-import Dashboard from './components/Dashboard'
-import Companies from './components/Companies'
-import Contacts from './components/Contacts'
-import LeadLists from './components/LeadLists'
-import Export from './components/Export'
-import LeadGeneration from './components/LeadGeneration'
-import './App.css'
 
-// API Configuration
+// Minimal error-catching version
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+// Log everything for debugging
+console.log('=== LEADDB DEBUG START ===')
 console.log('Environment check:', {
   VITE_API_URL: import.meta.env.VITE_API_URL,
   API_BASE_URL,
   allEnvVars: import.meta.env
 })
+console.log('React loaded successfully')
+console.log('=== LEADDB DEBUG END ===')
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [apiStatus, setApiStatus] = useState('checking')
-
-  // Check API connection on startup
-  useEffect(() => {
-    const checkApiConnection = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/health`)
-        if (response.ok) {
-          setApiStatus('connected')
-        } else {
-          setApiStatus('error')
-        }
-      } catch (error) {
-        setApiStatus('error')
-      }
-    }
-
-    checkApiConnection()
-  }, [])
-
-  // Add a simple loading/error state for debugging
-  if (apiStatus === 'checking') {
+  console.log('App function called')
+  
+  try {
+    console.log('Attempting to render minimal app')
+    
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Loading LeadDB...</h2>
-          <p>Connecting to API: {API_BASE_URL}</p>
+      <div style={{
+        padding: '20px',
+        fontFamily: 'Arial, sans-serif',
+        backgroundColor: '#f0f0f0',
+        minHeight: '100vh'
+      }}>
+        <h1 style={{ color: '#333', marginBottom: '20px' }}>LeadDB Debug Test</h1>
+        <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '5px', marginBottom: '15px' }}>
+          <h2>Environment Variables:</h2>
+          <p><strong>VITE_API_URL:</strong> {import.meta.env.VITE_API_URL || 'Not set'}</p>
+          <p><strong>API_BASE_URL:</strong> {API_BASE_URL}</p>
+          <p><strong>Mode:</strong> {import.meta.env.MODE}</p>
+        </div>
+        <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '5px' }}>
+          <h2>Status:</h2>
+          <p style={{ color: 'green' }}>✅ React is working</p>
+          <p style={{ color: 'green' }}>✅ App component rendered</p>
+          <p style={{ color: 'green' }}>✅ Environment variables accessible</p>
+        </div>
+        <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '5px', marginTop: '15px' }}>
+          <h2>Next Steps:</h2>
+          <p>If you can see this page, React is working. Check browser console for debug logs.</p>
+          <p>API URL: <a href={`${API_BASE_URL}/health`} target="_blank" rel="noopener noreferrer">{API_BASE_URL}/health</a></p>
         </div>
       </div>
     )
-  }
-
-  return (
-    <Router>
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-          apiStatus={apiStatus}
-        />
-        
-        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
-          sidebarOpen ? 'ml-64' : 'ml-16'
-        }`}>
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard apiBaseUrl={API_BASE_URL} />} />
-              <Route path="/companies" element={<Companies apiBaseUrl={API_BASE_URL} />} />
-              <Route path="/contacts" element={<Contacts apiBaseUrl={API_BASE_URL} />} />
-              <Route path="/lead-lists" element={<LeadLists apiBaseUrl={API_BASE_URL} />} />
-              <Route path="/lead-generation" element={<LeadGeneration apiBaseUrl={API_BASE_URL} />} />
-              <Route path="/export" element={<Export apiBaseUrl={API_BASE_URL} />} />
-            </Routes>
-          </main>
-        </div>
-        
-        <Toaster />
+  } catch (error) {
+    console.error('Error in App component:', error)
+    return (
+      <div style={{ padding: '20px', color: 'red', fontFamily: 'Arial, sans-serif' }}>
+        <h1>Error in LeadDB App</h1>
+        <p>Error: {error.message}</p>
+        <p>Check browser console for more details.</p>
       </div>
-    </Router>
-  )
+    )
+  }
 }
 
 export default App
