@@ -90,7 +90,8 @@ function Companies() {
         const response = await fetch(`${API_BASE_URL}/api/companies`)
         if (response.ok) {
           const data = await response.json()
-          setCompanies(data)
+          // Handle the API response format: {companies: [], total: 0, ...}
+          setCompanies(data.companies || [])
         }
       } catch (error) {
         console.error('Error fetching companies:', error)
@@ -149,7 +150,8 @@ function Contacts() {
         const response = await fetch(`${API_BASE_URL}/api/contacts`)
         if (response.ok) {
           const data = await response.json()
-          setContacts(data)
+          // Handle the API response format: {contacts: [], total: 0, ...}
+          setContacts(data.contacts || [])
         }
       } catch (error) {
         console.error('Error fetching contacts:', error)
@@ -211,7 +213,8 @@ function LeadGeneration() {
       const response = await fetch(`${API_BASE_URL}/api/companies/search?${params}`)
       if (response.ok) {
         const data = await response.json()
-        setResults(data)
+        // Handle the API response format: {companies: [], total: 0, ...}
+        setResults(data.companies || [])
       }
     } catch (error) {
       console.error('Error searching leads:', error)
