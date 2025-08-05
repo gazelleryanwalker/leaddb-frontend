@@ -134,6 +134,28 @@ function Navigation({ currentPage, onNavigate }) {
 
 // Dashboard Component
 function Dashboard({ apiStatus }) {
+  const [stats, setStats] = useState({ companies: 'Loading...', contacts: 'Loading...', campaigns: 'Loading...' });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (apiStatus !== 'connected') return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/stats`);
+        const data = await response.json();
+        if (data.status === 'success') {
+          setStats(data.stats);
+        } else {
+          console.error('Failed to fetch stats:', data.message);
+          setStats({ companies: 'Error', contacts: 'Error', campaigns: 'Error' });
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        setStats({ companies: 'Error', contacts: 'Error', campaigns: 'Error' });
+      }
+    };
+    fetchStats();
+  }, [apiStatus]);
+
   return (
     <div style={{ padding: '20px' }}>
       <h1 style={{ color: '#333', marginBottom: '20px' }}>🚀 LeadDB Dashboard</h1>
@@ -152,9 +174,9 @@ function Dashboard({ apiStatus }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
           <h3>📊 Quick Stats</h3>
-          <p>Total Companies: Loading...</p>
-          <p>Total Contacts: Loading...</p>
-          <p>Active Campaigns: Loading...</p>
+          <p>Total Companies: {stats.companies}</p>
+          <p>Total Contacts: {stats.contacts}</p>
+          <p>Active Campaigns: {stats.campaigns}</p>
         </div>
       </div>
     </div>
