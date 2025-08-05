@@ -380,6 +380,330 @@ function LeadGeneration() {
   )
 }
 
+// Lead Lists Component
+function LeadLists() {
+  const [leadLists, setLeadLists] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [newListName, setNewListName] = useState('')
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  
+  useEffect(() => {
+    const fetchLeadLists = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/lists`)
+        if (response.ok) {
+          const data = await response.json()
+          setLeadLists(data.lists || [])
+        }
+      } catch (error) {
+        console.error('Error fetching lead lists:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchLeadLists()
+  }, [])
+  
+  const createNewList = async () => {
+    if (!newListName.trim()) return
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/lists`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newListName,
+          description: `Lead list created on ${new Date().toLocaleDateString()}`
+        })
+      })
+      
+      if (response.ok) {
+        const newList = await response.json()
+        setLeadLists([...leadLists, newList])
+        setNewListName('')
+        setShowCreateForm(false)
+      }
+    } catch (error) {
+      console.error('Error creating lead list:', error)
+    }
+  }
+  
+  return (
+    <div style={{ padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1 style={{ color: '#333', margin: 0 }}>📋 Lead Lists</h1>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          + Create New List
+        </button>
+      </div>
+      
+      {showCreateForm && (
+        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
+          <h3>Create New Lead List</h3>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+            <input
+              type="text"
+              placeholder="List name (e.g., Q1 Prospects)"
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              style={{ flex: 1, padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+            />
+            <button
+              onClick={createNewList}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Create
+            </button>
+            <button
+              onClick={() => setShowCreateForm(false)}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {loading ? (
+        <p>Loading lead lists...</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+          {leadLists.length === 0 ? (
+            <div style={{ backgroundColor: 'white', padding: '40px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', textAlign: 'center' }}>
+              <h3>No Lead Lists Yet</h3>
+              <p>Create your first lead list to organize your prospects and campaigns.</p>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Create First List
+              </button>
+            </div>
+          ) : (
+            leadLists.map((list, index) => (
+              <div key={index} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>{list.name}</h3>
+                <p style={{ margin: '0 0 15px 0', color: '#666' }}>{list.description || 'No description'}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#666', fontSize: '14px' }}>
+                    {list.contact_count || 0} contacts
+                  </span>
+                  <button
+                    style={{
+                      padding: '5px 15px',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    View List
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Export Component
+function Export() {
+  const [exportType, setExportType] = useState('contacts')
+  const [exportFormat, setExportFormat] = useState('csv')
+  const [crmPlatform, setCrmPlatform] = useState('zoho')
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportStatus, setExportStatus] = useState('')
+  
+  const handleExport = async () => {
+    setIsExporting(true)
+    setExportStatus('Preparing export...')
+    
+    try {
+      const endpoint = exportType === 'contacts' ? '/api/export/contacts' : '/api/export/companies'
+      const params = new URLSearchParams({
+        format: exportFormat,
+        platform: crmPlatform
+      })
+      
+      setExportStatus('Fetching data...')
+      const response = await fetch(`${API_BASE_URL}${endpoint}?${params}`)
+      
+      if (response.ok) {
+        setExportStatus('Downloading file...')
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `leaddb_${exportType}_${new Date().toISOString().split('T')[0]}.${exportFormat}`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+        setExportStatus('Export completed successfully!')
+      } else {
+        setExportStatus('Export failed. Please try again.')
+      }
+    } catch (error) {
+      console.error('Export error:', error)
+      setExportStatus('Export failed. Please try again.')
+    } finally {
+      setIsExporting(false)
+      setTimeout(() => setExportStatus(''), 3000)
+    }
+  }
+  
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ color: '#333', marginBottom: '20px' }}>📤 Export Data</h1>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+        {/* Export Configuration */}
+        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <h3>Export Configuration</h3>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Data Type:</label>
+            <select 
+              value={exportType} 
+              onChange={(e) => setExportType(e.target.value)}
+              style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+            >
+              <option value="contacts">Contacts</option>
+              <option value="companies">Companies</option>
+            </select>
+          </div>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Export Format:</label>
+            <select 
+              value={exportFormat} 
+              onChange={(e) => setExportFormat(e.target.value)}
+              style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+            >
+              <option value="csv">CSV (Excel Compatible)</option>
+              <option value="xlsx">Excel (.xlsx)</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+          
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>CRM Platform:</label>
+            <select 
+              value={crmPlatform} 
+              onChange={(e) => setCrmPlatform(e.target.value)}
+              style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}
+            >
+              <option value="zoho">Zoho CRM</option>
+              <option value="hubspot">HubSpot</option>
+              <option value="salesforce">Salesforce</option>
+              <option value="pipedrive">Pipedrive</option>
+              <option value="generic">Generic Format</option>
+            </select>
+          </div>
+          
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            style={{
+              width: '100%',
+              padding: '12px',
+              backgroundColor: isExporting ? '#6c757d' : '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isExporting ? 'not-allowed' : 'pointer',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }}
+          >
+            {isExporting ? 'Exporting...' : `📤 Export ${exportType.charAt(0).toUpperCase() + exportType.slice(1)}`}
+          </button>
+          
+          {exportStatus && (
+            <div style={{ 
+              marginTop: '15px', 
+              padding: '10px', 
+              backgroundColor: exportStatus.includes('failed') ? '#f8d7da' : '#d4edda',
+              border: `1px solid ${exportStatus.includes('failed') ? '#f5c6cb' : '#c3e6cb'}`,
+              borderRadius: '4px',
+              color: exportStatus.includes('failed') ? '#721c24' : '#155724'
+            }}>
+              {exportStatus}
+            </div>
+          )}
+        </div>
+        
+        {/* Export Instructions */}
+        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <h3>📝 Export Instructions</h3>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <h4>How to Use:</h4>
+            <ol style={{ paddingLeft: '20px', lineHeight: '1.6' }}>
+              <li>Select the data type you want to export (Contacts or Companies)</li>
+              <li>Choose your preferred export format (CSV, Excel, or JSON)</li>
+              <li>Select your CRM platform for optimized field mapping</li>
+              <li>Click the Export button to download your file</li>
+            </ol>
+          </div>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <h4>CRM Import Tips:</h4>
+            <ul style={{ paddingLeft: '20px', lineHeight: '1.6' }}>
+              <li><strong>Zoho CRM:</strong> Use CSV format with standard field mapping</li>
+              <li><strong>HubSpot:</strong> Excel format works best for bulk imports</li>
+              <li><strong>Salesforce:</strong> CSV format with custom field mapping</li>
+              <li><strong>Pipedrive:</strong> Use generic CSV format</li>
+            </ul>
+          </div>
+          
+          <div style={{ padding: '15px', backgroundColor: '#e7f3ff', borderRadius: '4px', border: '1px solid #b3d9ff' }}>
+            <strong>💡 Pro Tip:</strong> Always review your exported data before importing into your CRM to ensure field mappings are correct.
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [apiStatus, setApiStatus] = useState('checking')
@@ -408,9 +732,9 @@ function App() {
       case 'lead-generation':
         return <LeadGeneration />
       case 'lead-lists':
-        return <div style={{ padding: '20px' }}><h1>📋 Lead Lists</h1><p>Lead list management coming soon...</p></div>
+        return <LeadLists />
       case 'export':
-        return <div style={{ padding: '20px' }}><h1>📤 Export</h1><p>CRM export tools coming soon...</p></div>
+        return <Export />
       default:
         return <Dashboard apiStatus={apiStatus} />
     }
