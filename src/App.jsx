@@ -7,6 +7,8 @@ console.log('LeadDB API URL:', API_BASE_URL)
 
 // Navigation Component
 function Navigation({ currentPage, onNavigate }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  
   const navItems = [
     { id: 'dashboard', label: '🏠 Dashboard' },
     { id: 'companies', label: '🏢 Companies' },
@@ -16,37 +18,117 @@ function Navigation({ currentPage, onNavigate }) {
     { id: 'export', label: '📤 Export' }
   ]
   
+  const handleNavClick = (pageId) => {
+    onNavigate(pageId)
+    setIsMobileMenuOpen(false) // Close mobile menu after navigation
+  }
+  
   return (
-    <nav style={{ 
-      backgroundColor: '#2c3e50', 
-      padding: '20px', 
-      minHeight: '100vh',
-      width: '250px',
-      position: 'fixed',
-      left: 0,
-      top: 0
-    }}>
-      <h2 style={{ color: 'white', marginBottom: '30px' }}>🚀 LeadDB</h2>
-      {navItems.map(item => (
-        <div 
-          key={item.id}
-          onClick={() => onNavigate(item.id)}
-          style={{
-            padding: '12px 16px',
-            margin: '8px 0',
-            backgroundColor: currentPage === item.id ? '#34495e' : 'transparent',
-            color: 'white',
-            cursor: 'pointer',
-            borderRadius: '6px',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#34495e'}
-          onMouseOut={(e) => e.target.style.backgroundColor = currentPage === item.id ? '#34495e' : 'transparent'}
-        >
-          {item.label}
-        </div>
-      ))}
-    </nav>
+    <>
+      {/* Mobile Menu Button */}
+      <button 
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        style={{
+          display: 'block',
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          zIndex: 1001,
+          backgroundColor: '#2c3e50',
+          color: 'white',
+          border: 'none',
+          padding: '10px',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          fontSize: '18px'
+        }}
+        className="mobile-menu-btn"
+      >
+        {isMobileMenuOpen ? '✕' : '☰'}
+      </button>
+      
+      {/* Desktop Navigation */}
+      <nav style={{ 
+        backgroundColor: '#2c3e50', 
+        padding: '20px', 
+        minHeight: '100vh',
+        width: '250px',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        display: 'block'
+      }} className="desktop-nav">
+        <h2 style={{ color: 'white', marginBottom: '30px' }}>🚀 LeadDB</h2>
+        {navItems.map(item => (
+          <div 
+            key={item.id}
+            onClick={() => handleNavClick(item.id)}
+            style={{
+              padding: '12px 16px',
+              margin: '8px 0',
+              backgroundColor: currentPage === item.id ? '#34495e' : 'transparent',
+              color: 'white',
+              cursor: 'pointer',
+              borderRadius: '6px',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.target.style.backgroundColor = '#34495e'}
+            onMouseOut={(e) => e.target.style.backgroundColor = currentPage === item.id ? '#34495e' : 'transparent'}
+          >
+            {item.label}
+          </div>
+        ))}
+      </nav>
+      
+      {/* Mobile Navigation Overlay */}
+      {isMobileMenuOpen && (
+        <>
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 999
+            }}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <nav style={{ 
+            backgroundColor: '#2c3e50', 
+            padding: '20px', 
+            minHeight: '100vh',
+            width: '280px',
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            zIndex: 1000,
+            transform: 'translateX(0)',
+            transition: 'transform 0.3s ease'
+          }} className="mobile-nav">
+            <h2 style={{ color: 'white', marginBottom: '30px', marginTop: '40px' }}>🚀 LeadDB</h2>
+            {navItems.map(item => (
+              <div 
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                style={{
+                  padding: '12px 16px',
+                  margin: '8px 0',
+                  backgroundColor: currentPage === item.id ? '#34495e' : 'transparent',
+                  color: 'white',
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                {item.label}
+              </div>
+            ))}
+          </nav>
+        </>
+      )}
+    </>
   )
 }
 
@@ -336,8 +418,31 @@ function App() {
   
   return (
     <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          .mobile-menu-btn {
+            display: block !important;
+          }
+          .main-content {
+            margin-left: 0 !important;
+            padding-top: 70px;
+          }
+        }
+        @media (min-width: 769px) {
+          .mobile-menu-btn {
+            display: none !important;
+          }
+          .main-content {
+            margin-left: 250px !important;
+            padding-top: 0;
+          }
+        }
+      `}</style>
       <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
-      <div style={{ marginLeft: '250px' }}>
+      <div className="main-content" style={{ marginLeft: '250px' }}>
         {renderPage()}
       </div>
     </div>
